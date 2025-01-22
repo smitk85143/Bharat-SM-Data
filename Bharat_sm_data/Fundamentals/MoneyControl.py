@@ -49,6 +49,8 @@ class MoneyControl(CustomSession):
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0'
         })
         self._base_url = 'https://www.moneycontrol.com'
+        self._base_api_url = 'https://api.moneycontrol.com'
+        self._base_priceapi_url = 'https://priceapi.moneycontrol.com'
         self.hit_and_get_data(f'{self._base_url}/')
         self.valid_intervals_for_vix = ['1',  # 1 min
                                         '1d',  # 1 day
@@ -587,3 +589,135 @@ class MoneyControl(CustomSession):
         df = pd.read_html(io.StringIO(response.text))[0]
         return df
     
+    def get_stock_history_data(self, nse_or_bse_ticker: str, from_time: int, to_time: int, countback: int, resolution: str = 5):
+        """
+            Get stock history data for a given NSE ticker.
+
+            :param self: Represent the instance of the class.
+            :param nse_or_bse_ticker: The NSE or BSE ticker of the stock.
+            :param from_time: The start time in Unix timestamp.
+            :param to_time: The end time in Unix timestamp.
+            :param countback: The number of data points to count back.
+            :param resolution: The resolution of the data. Defaults to 5.
+
+            :return: The stock history data.
+        """
+
+        params = {
+            'symbol': nse_or_bse_ticker,
+            'resolution': resolution,
+            'from': from_time,
+            'to': to_time,
+            'countback': countback,
+            'currencyCode': 'INR',
+        }
+
+        response = self.session.get(f'{self._base_priceapi_url}/techCharts/indianMarket/stock/history',
+                                    params=params, headers=self.headers)
+        return response.json()
+    
+
+    def get_current_pricefeed(self, exchange: str, sc_id: str):
+        """
+            Get the current price feed for a given exchange and stock code.
+
+            :param self: Represent the instance of the class.
+            :param exchange: The exchange of the stock. nse or bse.
+            :param sc_id: The stock code of the moneycontrol stock.
+
+            :return: The current price feed.
+        """
+
+        response = self.session.get(f'{self._base_priceapi_url}/pricefeed/{exchange}/equitycash/{sc_id}', headers=self.headers)
+        return response.json()
+    
+
+    def get_estimates_analyst_rating(self, exchange: str, sc_id: str):
+        """
+            Get the estimates analyst rating for a given exchange and stock code.
+
+            :param self: Represent the instance of the class.
+            :param exchange: The exchange of the stock. N or B.
+            :param sc_id: The stock code of the moneycontrol stock.
+
+            :return: The estimates analyst rating.
+        """
+
+        params = {
+            'deviceType': 'W',
+            'scId': sc_id,
+            'ex': exchange
+        }
+
+        response = self.session.get(f'{self._base_api_url}/mcapi/v1/stock/estimates/analyst-rating', headers=self.headers, params=params)
+
+        return response.json()
+    
+
+    def get_estimates_consensus(self, exchange: str, sc_id: str):
+        """
+            Get the estimates consensus for a given exchange and stock code.
+
+            :param self: Represent the instance of the class.
+            :param exchange: The exchange of the stock. N or B.
+            :param sc_id: The stock code of the moneycontrol stock.
+
+            :return: The estimates consensus.
+        """
+
+        params = {
+            'deviceType': 'W',
+            'scId': sc_id,
+            'ex': exchange
+        }
+
+        response = self.session.get(f'{self._base_api_url}/mcapi/v1/stock/estimates/consensus', headers=self.headers, params=params)
+
+        return response.json()
+    
+
+    def get_estimates_earning_forecast(self, exchange: str, sc_id: str, frequency: int = 12):
+        """
+            Get the estimates earning forecast for a given exchange and stock code.
+
+            :param self: Represent the instance of the class.
+            :param exchange: The exchange of the stock. N or B.
+            :param sc_id: The stock code of the moneycontrol stock.
+            :param frequency: The frequency of the data. Defaults to 12. 12 mean yearly and 3 mean quarterly.
+
+            :return: The estimates earning forecast.
+        """
+
+        params = {
+            'deviceType': 'W',
+            'scId': sc_id,
+            'ex': exchange,
+            'frequency': frequency,
+            'financialType': 'C'
+        }
+
+        response = self.session.get(f'{self._base_api_url}/mcapi/v1/stock/estimates/earning-forecast', headers=self.headers, params=params)
+
+        return response.json()
+    
+
+    def get_estimates_price_forecast(self, exchange: str, sc_id: str):
+        """
+            Get the estimates price forecast for a given exchange and stock code.
+
+            :param self: Represent the instance of the class.
+            :param exchange: The exchange of the stock. N or B.
+            :param sc_id: The stock code of the moneycontrol stock.
+
+            :return: The estimates price forecast.
+        """
+
+        params = {
+            'deviceType': 'W',
+            'scId': sc_id,
+            'ex': exchange
+        }
+
+        response = self.session.get(f'{self._base_api_url}/mcapi/v1/stock/estimates/price-forecast', headers=self.headers, params=params)
+
+        return response.json()
