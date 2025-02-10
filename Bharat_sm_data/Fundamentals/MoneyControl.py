@@ -589,6 +589,27 @@ class MoneyControl(CustomSession):
         df = pd.read_html(io.StringIO(response.text))[0]
         return df
     
+
+    def get_symbol_info(self, nse_or_bse_ticker: str):
+        """
+            Get symbol information for a given NSE or BSE ticker.
+
+            :param self: Represent the instance of the class.
+            :param nse_or_bse_ticker: The NSE or BSE ticker of the stock.
+
+            :return: The symbol information.
+        """
+
+        params = {
+            "symbol": nse_or_bse_ticker
+        }
+
+        response = self.session.get(f'{self._base_priceapi_url}/techCharts/indianMarket/index/symbols',
+                                    params=params, headers=self.headers)
+        
+        return response.json()
+
+    
     def get_stock_history_data(self, nse_or_bse_ticker: str, from_time: int, to_time: int, countback: int, resolution: str = 5):
         """
             Get stock history data for a given NSE ticker.
